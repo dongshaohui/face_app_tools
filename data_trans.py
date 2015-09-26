@@ -14,6 +14,14 @@ def write_record_db(db,list_obj,table_name):
         db.commit()
     except Exception,e:
         print e	
+		
+		
+def update_record_db(db,list_obj,cond_obj,table_name):
+	try:
+		db.update( table_name,	list_obj, cond_obj)
+		db.commit()
+    except Exception,e:
+        print e		
 
 def trans(db):
 	features = db.select('select * from faceapp_facial_feature')
