@@ -87,6 +87,8 @@ def pre_run(db):
 	loading_faceset(db,female_star_face_result,'882895af96bce804ae701972f05e599b')
 
 
+# 
+
 # 检查图像文件是否存在人脸（即是否有效）
 def check_image_valid(db):
 	print 'check_image_valid'
