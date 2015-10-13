@@ -70,13 +70,53 @@ def check_faceset_info(db,faceset_type):
 	face_id_diff_list = (set)(face_id_list) - (set)(face_id_user_list)
 	print face_id_diff_list
 
+# 查看faceset集合
+def get_faceset_list():
+	print 'get faceset list'
+	params = urllib.urlencode({'api_key': API_KEY,'api_secret':API_SECRET})
+	get_faceset_list_url = 'https://apicn.faceplusplus.com/v2/info/get_faceset_list?%s' % params
+	f = urllib.urlopen(get_faceset_list_url)
+	result = json.loads(f.read())
+	print result
+
+
+# 向 faceset 添加 face
+def add_face_into_faceset(db,filename,faceset_id):
+	img_list = fetch_img_list(filename)
+	params = urllib.urlencode({'api_key': API_KEY,'api_secret':API_SECRET})
+	api = API(API_KEY, API_SECRET)
+	for img_link in img_list:
+		record = {}
+		cond_list = {}
+		p_result = None
+		p_result = api.detection.detect(url = img_link)['face']
+		face_id = p_result[0]['face_id']
+		add_face_params = urllib.urlencode({'api_key': API_KEY,'api_secret':API_SECRET,'faceset_id':faceset_id,'face_id':face_id})
+		add_face_url = 'https://apicn.faceplusplus.com/v2/faceset/add_face?' + add_face_params
+		f = urllib.urlopen(add_face_url)
+		add_result = json.loads(f.read())
+		record['face_id'] = face_id
+		cond_list['img_link'] = img_link
+		update_record_db(db,record,cond_list,'userservinf_his_character')
+		print face_id, ' updated !'
+	print faceset_id
+
+# 读取人脸链接文件
+def fetch_img_list(filename):
+	f = open(filename,'r')
+	rc = f.readlines()
+	rc = map(lambda x: x.strip(), rc)
+	return rc
+
 if __name__ == '__main__':
 	db = Connent_Online_Mysql_By_DB('rdsjjuvbqjjuvbqout.mysql.rds.aliyuncs.com',3306,'dongsh','5561225','faceapp','/tmp/mysql.sock')
 	if sys.argv[1] == 'check_face_set':
 		check_faceset_info(db,sys.argv[2])
 	elif sys.argv[1] == 'add_face_into_face_set':
-		print 'add face'
+		add_face_into_faceset(db,sys.argv[2],sys.argv[3])
 	elif sys.argv[1] == 'train_faceset':
 		train_faceset(db,sys.argv[2])
 	elif sys.argv[1] == 'check_session':
 		check_session(sys.argv[2])
+	elif sys.argv[1] == 'get_faceset_list':
+		get_faceset_list()
