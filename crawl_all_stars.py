@@ -64,8 +64,9 @@ def face_filter(img_src):
 			break
 		except:
 			continue
+	# print p_result
 	if p_result != None and len(p_result) == 1:
-		return True
+		return p_result[0]['face_id']
 	else:
 		return False
 
@@ -94,10 +95,12 @@ def crawl_star_imgs(img_page_link):
 			f2 = urllib2.urlopen(r2, data=None, timeout=10)	
 			soup2 = BeautifulSoup(f2.read())
 			star_img_link = soup2.find('div',{'class':'img_box'}).find('img')['src']
-			if face_filter(star_img_link) == True:
+			face_id = face_filter(star_img_link)
+			print link,face_id
+			if face_filter(star_img_link) != False:
 				star_imgs.append(star_img_link)
 		except:
-			print link,' error!'
+			print link,' find face error!'
 			continue
 	return star_imgs
 
@@ -142,6 +145,7 @@ def crawl_star_info(db,page_link):
 			name = li.text
 			front_img_link = li.find('img')['src']
 			info_link = li.find('a')['href']
+			print name
 			location,constellation,height,weight,profession,star_imgs = parse_star_info(info_link)
 			print name,star_imgs
 			# print location
