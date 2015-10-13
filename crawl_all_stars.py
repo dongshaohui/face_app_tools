@@ -71,7 +71,7 @@ def face_filter(img_src):
 		return False
 
 # 爬取明星图片
-def crawl_star_imgs(img_page_link):
+def crawl_star_imgs(db,img_page_link,star_id):
 	star_imgs = []
 	root_link = img_page_link[:img_page_link.rfind('/')+1]
 	r = None
@@ -98,14 +98,17 @@ def crawl_star_imgs(img_page_link):
 			face_id = face_filter(star_img_link)
 			print link,face_id
 			if face_filter(star_img_link) != False:
-				star_imgs.append(star_img_link)
+				star_img_record = {}
+				star_img_record['face_id'] = face_id
+				star_img_record['face_image_link'] = star_img_link
+				star_img_record['star_id'] = star_id
+				write_record_db(db,star_img_record,'userservinf_star_image')  # 写入数据库
 		except:
 			print link,' find face error!'
 			continue
-	return star_imgs
 
 # 解析明星详情
-def parse_star_info(info_link):
+def parse_star_info(info_link,name):
 	info_tags = ['出生','星座','身高','体重','职业']
 	info_tags_index = []
 	r = urllib2.Request(info_link)
@@ -124,15 +127,24 @@ def parse_star_info(info_link):
 	height = clean_str(star_info[info_tags_index[2]:info_tags_index[3]]) + ' CM'
 	weight = clean_str(star_info[info_tags_index[3]:info_tags_index[4]]) + ' KG'
 	profession = clean_str(star_info[info_tags_index[4]:])
+	
+	star_info = {}
+	star_info['name'] = name.decode('utf-8')
+	star_info['location'] = location.decode('utf-8')
+	star_info['constellation'] = constellation.decode('utf-8')
+	star_info['height'] = height.decode('utf-8')
+	star_info['weight'] = weight.decode('utf-8')
+	star_info['profession'] = profession.decode('utf-8')
+	write_record_db(db,star_info,'userservinf_star_character')  # 写入数据库
+	
+	star_id = db.select('select id from userservinf_star_character order by id desc limit 1')[0][0]
+	
 	star_imgs = []
 	# 爬取明星写真
 	star_img_urls = soup.find('ul',{'id':'xiezhen'}).findAll('li')
 	for img_url_obj in star_img_urls:
 		img_url = img_url_obj.find('a')['href']
-		star_imgs += crawl_star_imgs(img_url)
-	
-	return location,constellation,height,weight,profession,star_imgs
-	
+		crawl_star_imgs(db,img_url,star_id)
 	
 def crawl_star_info(db,page_link):
 	r = urllib2.Request(page_link)
@@ -142,12 +154,10 @@ def crawl_star_info(db,page_link):
 	for box in boxes:
 		lis = box.findAll('li')
 		for li in lis:
-			name = li.text
+			name = li.text.encode('utf-8')
 			front_img_link = li.find('img')['src']
 			info_link = li.find('a')['href']
-			print name
-			location,constellation,height,weight,profession,star_imgs = parse_star_info(info_link)
-			print name,star_imgs
+			parse_star_info(info_link,name)
 			# print location
 
 def crawl_all_star_info(db):
