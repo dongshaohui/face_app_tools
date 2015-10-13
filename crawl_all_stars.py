@@ -76,18 +76,19 @@ def crawl_star_imgs(db,img_page_link,star_id):
 	root_link = img_page_link[:img_page_link.rfind('/')+1]
 	r = None
 	f = None
+	soup = None
+	page_num = None
 	# 获取页数
 	try:
 		r = urllib2.Request(img_page_link)
-		f = urllib2.urlopen(r, data=None, timeout=10)	
+		f = urllib2.urlopen(r, data=None, timeout=10)
+		soup = BeautifulSoup(f.read())
+		if str.isdigit(soup.find('div',{'id':'page'}).findAll('a')[-2].text.encode('utf-8')) == True:
+			page_num = (int)(soup.find('div',{'id':'page'}).findAll('a')[-2].text.encode('utf-8'))
+		else:
+			page_num = (int)(soup.find('div',{'id':'page'}).findAll('a')[-3].text.encode('utf-8'))
 	except:
 		return []
-	soup = BeautifulSoup(f.read())
-	page_num = None
-	if str.isdigit(soup.find('div',{'id':'page'}).findAll('a')[-2].text.encode('utf-8')) == True:
-		page_num = (int)(soup.find('div',{'id':'page'}).findAll('a')[-2].text.encode('utf-8'))
-	else:
-		page_num = (int)(soup.find('div',{'id':'page'}).findAll('a')[-3].text.encode('utf-8'))
 	for i in range(1,page_num+1):
 		link = root_link + (str)(i) + '.html'
 		try:
