@@ -112,37 +112,44 @@ def crawl_star_imgs(db,img_page_link,star_id):
 def parse_star_info(info_link,name):
 	info_tags = ['出生','星座','身高','体重','职业']
 	info_tags_index = []
-	r = urllib2.Request(info_link)
-	f = urllib2.urlopen(r, data=None, timeout=10)	
-	soup = BeautifulSoup(f.read())
-	info_header = soup.find('div',{'class':'wrapper1220 cm_block01'})
+	star_img_urls = []
+	star_id = None
+	try:
+		r = urllib2.Request(info_link)
+		f = urllib2.urlopen(r, data=None, timeout=10)	
+		soup = BeautifulSoup(f.read())
+		info_header = soup.find('div',{'class':'wrapper1220 cm_block01'})
 	
-	# 解析明星信息
-	star_summary = info_header.find('h3',{'class':'txt01'}).text[:-2] # 明星简介
-	star_info = info_header.find('div',{'class':'txt02'}).text.encode('utf-8')
-	for tag in info_tags:
-		info_tags_index.append(star_info.find(tag))
+		# 解析明星信息
+		star_summary = info_header.find('h3',{'class':'txt01'}).text[:-2] # 明星简介
+		star_info = info_header.find('div',{'class':'txt02'}).text.encode('utf-8')
+		for tag in info_tags:
+			info_tags_index.append(star_info.find(tag))
 	
-	location = clean_str(star_info[info_tags_index[0]:info_tags_index[1]])
-	constellation = clean_str(star_info[info_tags_index[1]:info_tags_index[2]])
-	height = clean_str(star_info[info_tags_index[2]:info_tags_index[3]]) + ' CM'
-	weight = clean_str(star_info[info_tags_index[3]:info_tags_index[4]]) + ' KG'
-	profession = clean_str(star_info[info_tags_index[4]:])
+		location = clean_str(star_info[info_tags_index[0]:info_tags_index[1]])
+		constellation = clean_str(star_info[info_tags_index[1]:info_tags_index[2]])
+		height = clean_str(star_info[info_tags_index[2]:info_tags_index[3]]) + ' CM'
+		weight = clean_str(star_info[info_tags_index[3]:info_tags_index[4]]) + ' KG'
+		profession = clean_str(star_info[info_tags_index[4]:])
 	
-	star_info = {}
-	star_info['name'] = name.decode('utf-8')
-	star_info['location'] = location.decode('utf-8')
-	star_info['constellation'] = constellation.decode('utf-8')
-	star_info['height'] = height.decode('utf-8')
-	star_info['weight'] = weight.decode('utf-8')
-	star_info['profession'] = profession.decode('utf-8')
-	write_record_db(db,star_info,'userservinf_star_character')  # 写入数据库
+		star_info = {}
+		star_info['name'] = name.decode('utf-8')
+		star_info['location'] = location.decode('utf-8')
+		star_info['constellation'] = constellation.decode('utf-8')
+		star_info['height'] = height.decode('utf-8')
+		star_info['weight'] = weight.decode('utf-8')
+		star_info['profession'] = profession.decode('utf-8')
+		write_record_db(db,star_info,'userservinf_star_character')  # 写入数据库
 	
-	star_id = db.select('select id from userservinf_star_character order by id desc limit 1')[0][0]
+		star_id = db.select('select id from userservinf_star_character order by id desc limit 1')[0][0]
 	
-	star_imgs = []
-	# 爬取明星写真
-	star_img_urls = soup.find('ul',{'id':'xiezhen'}).findAll('li')
+		star_imgs = []
+		# 爬取明星写真
+		star_img_urls = soup.find('ul',{'id':'xiezhen'}).findAll('li')
+	except:
+		print 'parsing star info error!'
+		return
+	
 	for img_url_obj in star_img_urls:
 		img_url = img_url_obj.find('a')['href']
 		crawl_star_imgs(db,img_url,star_id)
