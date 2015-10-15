@@ -7,6 +7,7 @@ import urllib
 from facepp import API
 import json
 import sys,os
+import socket
 
 API_KEY = 'e650f1c9f43900a5316906c658caa8be'
 API_SECRET = 'ron72ejcgEA6vR6BfIFD-UBBA8pFQ_QL'
@@ -68,7 +69,7 @@ def check_faceset_info(db,faceset_type):
 	
 	# 查看差集
 	face_id_diff_list = (set)(face_id_list) - (set)(face_id_user_list)
-	print face_id_diff_list
+	# print face_id_diff_list
 
 # 查看faceset集合
 def get_faceset_list():
@@ -87,9 +88,12 @@ def add_face_info_faceset_by_faceid(faceset_id,face_id_file):
 	for face_id in rc:
 		params = urllib.urlencode({'api_key': API_KEY,'api_secret':API_SECRET,'faceset_id':faceset_id,'face_id':face_id})
 		add_face_url = 'https://apicn.faceplusplus.com/v2/faceset/add_face?' + params
-		f = urllib.urlopen(add_face_url,timeout=8)
-		add_result = json.loads(f.read())
-		print add_result
+		try:
+			f = urllib.urlopen(add_face_url)
+			add_result = json.loads(f.read())
+			print add_result,face_id
+		except:
+			print 'error!'
 	
 	
 # 向 faceset 添加 face
@@ -122,6 +126,7 @@ def fetch_img_list(filename):
 
 if __name__ == '__main__':
 	db = Connent_Online_Mysql_By_DB('rdsjjuvbqjjuvbqout.mysql.rds.aliyuncs.com',3306,'dongsh','5561225','faceapp','/tmp/mysql.sock')
+	socket.setdefaulttimeout(60)
 	if sys.argv[1] == 'check_face_set':
 		check_faceset_info(db,sys.argv[2])
 	elif sys.argv[1] == 'add_face_into_face_set':
