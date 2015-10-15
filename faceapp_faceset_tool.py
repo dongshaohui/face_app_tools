@@ -79,7 +79,19 @@ def get_faceset_list():
 	result = json.loads(f.read())
 	print result
 
-
+# 向 faceset 添加 face
+def add_face_info_faceset_by_faceid(faceset_id,face_id_file):
+	f = open(face_id_file,'r')
+	rc = f.readlines()
+	rc = map(lambda x: x.strip(), rc)
+	for face_id in rc:
+		params = urllib.urlencode({'api_key': API_KEY,'api_secret':API_SECRET,'faceset_id':faceset_id,'face_id':face_id})
+		add_face_url = 'https://apicn.faceplusplus.com/v2/faceset/add_face?' + params
+		f = urllib.urlopen(add_face_url,timeout=8)
+		add_result = json.loads(f.read())
+		print add_result
+	
+	
 # 向 faceset 添加 face
 def add_face_into_faceset(db,filename,faceset_id):
 	img_list = fetch_img_list(filename)
@@ -120,3 +132,5 @@ if __name__ == '__main__':
 		check_session(sys.argv[2])
 	elif sys.argv[1] == 'get_faceset_list':
 		get_faceset_list()
+	elif sys.argv[1] == 'add_face_into_face_set_with_faceid':
+		add_face_info_faceset_by_faceid(sys.argv[2],sys.argv[3])
